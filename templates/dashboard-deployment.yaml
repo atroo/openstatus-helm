@@ -37,6 +37,8 @@ spec:
               value: {{ .Values.dashboard.env.HOSTNAME | quote }}
             - name: AUTH_TRUST_HOST
               value: {{ .Values.dashboard.env.AUTH_TRUST_HOST | quote }}
+            - name: AUTH_URL
+              value: {{ .Values.config.NEXT_PUBLIC_URL | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.dashboard.service.port }}
