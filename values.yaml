@@ -49,9 +49,9 @@ secrets:
   CRON_SECRET: ""
   ## Optional - Analytics
   TINY_BIRD_API_KEY: ""
-  ## Required by workflows service - set to your Upstash Redis URL or use placeholder
-  UPSTASH_REDIS_REST_URL: "http://localhost:6379"
-  UPSTASH_REDIS_REST_TOKEN: "placeholder"
+  ## Auto-configured when redis.enabled + serverlessRedisHttp.enabled
+  UPSTASH_REDIS_REST_URL: ""
+  UPSTASH_REDIS_REST_TOKEN: ""
   QSTASH_CURRENT_SIGNING_KEY: ""
   QSTASH_NEXT_SIGNING_KEY: ""
   QSTASH_TOKEN: ""
@@ -94,6 +94,41 @@ libsql:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 5
+
+# ---------------------------------------------------------------------------
+# Redis + Serverless Redis HTTP (Upstash-compatible REST proxy)
+# ---------------------------------------------------------------------------
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: "7-alpine"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+  service:
+    type: ClusterIP
+    port: 6379
+
+serverlessRedisHttp:
+  ## REST proxy that makes Redis compatible with @upstash/redis SDK
+  enabled: true
+  image:
+    repository: hiett/serverless-redis-http
+    tag: latest
+  token: "openstatus-redis-token"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+  service:
+    type: ClusterIP
+    port: 80
 
 # ---------------------------------------------------------------------------
 # Tinybird Local - Analytics Engine (optional)

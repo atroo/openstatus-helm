@@ -149,3 +149,17 @@ Server service host
 {{- define "openstatus.serverHost" -}}
 {{- include "openstatus.fullname" . }}-server
 {{- end }}
+
+{{/*
+Redis service host
+*/}}
+{{- define "openstatus.redisHost" -}}
+{{- include "openstatus.fullname" . }}-redis
+{{- end }}
+
+{{/*
+Serverless Redis HTTP service host
+*/}}
+{{- define "openstatus.srhHost" -}}
+{{- include "openstatus.fullname" . }}-srh
+{{- end }}

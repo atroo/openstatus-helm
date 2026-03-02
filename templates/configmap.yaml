@@ -15,3 +15,7 @@ data:
   {{- if .Values.tinybird.enabled }}
   TINYBIRD_URL: "http://{{ include "openstatus.tinybirdHost" . }}:{{ .Values.tinybird.service.port }}"
   {{- end }}
+  {{- if and .Values.redis.enabled .Values.serverlessRedisHttp.enabled }}
+  UPSTASH_REDIS_REST_URL: "http://{{ include "openstatus.srhHost" . }}:{{ .Values.serverlessRedisHttp.service.port }}"
+  UPSTASH_REDIS_REST_TOKEN: {{ .Values.serverlessRedisHttp.token | quote }}
+  {{- end }}

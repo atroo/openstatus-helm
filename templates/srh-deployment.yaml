@@ -1,0 +1,52 @@
+{{- if and .Values.redis.enabled .Values.serverlessRedisHttp.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openstatus.fullname" . }}-srh
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "srh") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "openstatus.selectorLabels" (dict "context" . "component" "srh") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "openstatus.componentLabels" (dict "context" . "component" "srh") | nindent 8 }}
+    spec:
+      {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
+      initContainers:
+        {{- include "openstatus.waitForTcp" (dict "name" "redis" "host" (include "openstatus.redisHost" .) "port" (toString .Values.redis.service.port)) | nindent 8 }}
+      containers:
+        - name: srh
+          image: "{{ .Values.serverlessRedisHttp.image.repository }}:{{ .Values.serverlessRedisHttp.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: SRH_MODE
+              value: "env"
+            - name: SRH_TOKEN
+              value: {{ .Values.serverlessRedisHttp.token | quote }}
+            - name: SRH_CONNECTION_STRING
+              value: "redis://{{ include "openstatus.redisHost" . }}:{{ .Values.redis.service.port }}"
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.serverlessRedisHttp.resources | nindent 12 }}
+{{- end }}

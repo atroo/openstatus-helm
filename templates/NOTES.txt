@@ -2,6 +2,7 @@ OpenStatus has been deployed!
 
 Components:
   - LibSQL:           {{ if .Values.libsql.enabled }}enabled{{ else }}disabled{{ end }}
+  - Redis + SRH:      {{ if and .Values.redis.enabled .Values.serverlessRedisHttp.enabled }}enabled{{ else }}disabled{{ end }}
   - Tinybird:         {{ if .Values.tinybird.enabled }}enabled{{ else }}disabled{{ end }}
   - Workflows:        enabled
   - Server (API):     enabled
