@@ -1,0 +1,303 @@
+questions:
+
+# ============================================================================
+# Required Settings
+# ============================================================================
+- variable: secrets.AUTH_SECRET
+  label: Auth Secret
+  description: "NextAuth secret for session encryption. Generate with: openssl rand -base64 32"
+  type: password
+  required: true
+  group: "Required Settings"
+
+- variable: secrets.RESEND_API_KEY
+  label: Resend API Key
+  description: "API key from resend.com for sending magic link emails"
+  type: password
+  required: true
+  group: "Required Settings"
+
+- variable: config.NEXT_PUBLIC_URL
+  label: Public URL
+  description: "Public URL where the dashboard will be accessible"
+  type: string
+  default: "http://localhost:3000"
+  required: true
+  group: "Required Settings"
+
+# ============================================================================
+# Database (LibSQL)
+# ============================================================================
+- variable: libsql.enabled
+  label: Enable built-in LibSQL
+  description: "Deploy LibSQL as part of this chart. Disable if using an external database."
+  type: boolean
+  default: true
+  group: "Database"
+  show_subquestion_if: true
+  subquestions:
+    - variable: libsql.persistence.enabled
+      label: Enable Persistence
+      description: "Use a PersistentVolumeClaim for database storage"
+      type: boolean
+      default: true
+    - variable: libsql.persistence.size
+      label: Volume Size
+      description: "Size of the persistent volume"
+      type: string
+      default: "10Gi"
+    - variable: libsql.persistence.storageClass
+      label: Storage Class
+      description: "Storage class for the PVC. Leave empty for default."
+      type: storageclass
+      default: ""
+    - variable: libsql.resources.requests.cpu
+      label: CPU Request
+      type: string
+      default: "100m"
+    - variable: libsql.resources.requests.memory
+      label: Memory Request
+      type: string
+      default: "256Mi"
+    - variable: libsql.resources.limits.memory
+      label: Memory Limit
+      type: string
+      default: "512Mi"
+
+- variable: config.DATABASE_URL
+  label: External Database URL
+  description: "Only set this if you disabled the built-in LibSQL and use an external database"
+  type: string
+  default: ""
+  group: "Database"
+  show_if: "libsql.enabled=false"
+
+# ============================================================================
+# Analytics (Tinybird)
+# ============================================================================
+- variable: tinybird.enabled
+  label: Enable Tinybird Local
+  description: "Deploy local Tinybird for analytics (latency charts, uptime graphs). Disable if using Tinybird Cloud or no analytics needed."
+  type: boolean
+  default: false
+  group: "Analytics"
+  show_subquestion_if: true
+  subquestions:
+    - variable: tinybird.resources.requests.cpu
+      label: CPU Request
+      type: string
+      default: "100m"
+    - variable: tinybird.resources.limits.memory
+      label: Memory Limit
+      type: string
+      default: "512Mi"
+
+- variable: secrets.TINY_BIRD_API_KEY
+  label: Tinybird API Key
+  description: "API key for Tinybird Cloud (leave empty if using local Tinybird or no analytics)"
+  type: password
+  default: ""
+  group: "Analytics"
+
+# ============================================================================
+# Optional Components
+# ============================================================================
+- variable: checker.enabled
+  label: Enable Checker
+  description: "Deploy the health checker service"
+  type: boolean
+  default: true
+  group: "Components"
+
+- variable: privateLocation.enabled
+  label: Enable Private Location
+  description: "Deploy the private location probe service"
+  type: boolean
+  default: true
+  group: "Components"
+
+- variable: dbMigrate.enabled
+  label: Enable DB Migration
+  description: "Run database migrations on install/upgrade"
+  type: boolean
+  default: true
+  group: "Components"
+
+# ============================================================================
+# Dashboard Ingress
+# ============================================================================
+- variable: dashboard.ingress.enabled
+  label: Enable Dashboard Ingress
+  description: "Expose the dashboard via an Ingress resource"
+  type: boolean
+  default: false
+  group: "Dashboard"
+  show_subquestion_if: true
+  subquestions:
+    - variable: dashboard.ingress.hostname
+      label: Hostname
+      description: "Hostname for the dashboard ingress"
+      type: hostname
+      default: "dashboard.example.com"
+      required: true
+    - variable: dashboard.ingress.className
+      label: Ingress Class
+      description: "Ingress class name (e.g. nginx, traefik)"
+      type: string
+      default: ""
+
+- variable: dashboard.replicaCount
+  label: Dashboard Replicas
+  type: int
+  default: 1
+  min: 1
+  max: 10
+  group: "Dashboard"
+
+# ============================================================================
+# Status Page Ingress
+# ============================================================================
+- variable: statusPage.ingress.enabled
+  label: Enable Status Page Ingress
+  description: "Expose the status page via an Ingress resource"
+  type: boolean
+  default: false
+  group: "Status Page"
+  show_subquestion_if: true
+  subquestions:
+    - variable: statusPage.ingress.hostname
+      label: Hostname
+      description: "Hostname for the status page ingress"
+      type: hostname
+      default: "status.example.com"
+      required: true
+    - variable: statusPage.ingress.className
+      label: Ingress Class
+      description: "Ingress class name (e.g. nginx, traefik)"
+      type: string
+      default: ""
+
+- variable: statusPage.replicaCount
+  label: Status Page Replicas
+  type: int
+  default: 1
+  min: 1
+  max: 10
+  group: "Status Page"
+
+# ============================================================================
+# Authentication (Optional)
+# ============================================================================
+- variable: secrets.AUTH_GITHUB_ID
+  label: GitHub OAuth Client ID
+  description: "Optional - for GitHub login"
+  type: string
+  default: ""
+  group: "Authentication"
+
+- variable: secrets.AUTH_GITHUB_SECRET
+  label: GitHub OAuth Client Secret
+  type: password
+  default: ""
+  group: "Authentication"
+
+- variable: secrets.AUTH_GOOGLE_ID
+  label: Google OAuth Client ID
+  description: "Optional - for Google login"
+  type: string
+  default: ""
+  group: "Authentication"
+
+- variable: secrets.AUTH_GOOGLE_SECRET
+  label: Google OAuth Client Secret
+  type: password
+  default: ""
+  group: "Authentication"
+
+# ============================================================================
+# Integrations (Optional)
+# ============================================================================
+- variable: secrets.STRIPE_SECRET_KEY
+  label: Stripe Secret Key
+  description: "Optional - for payment features"
+  type: password
+  default: ""
+  group: "Integrations"
+
+- variable: secrets.SLACK_SUPPORT_WEBHOOK_URL
+  label: Slack Webhook URL
+  description: "Optional - for Slack notifications"
+  type: string
+  default: ""
+  group: "Integrations"
+
+- variable: secrets.TELEGRAM_BOT_TOKEN
+  label: Telegram Bot Token
+  description: "Optional - for Telegram notifications"
+  type: password
+  default: ""
+  group: "Integrations"
+
+- variable: secrets.PAGERDUTY_APP_ID
+  label: PagerDuty App ID
+  description: "Optional - for PagerDuty alerting"
+  type: string
+  default: ""
+  group: "Integrations"
+
+# ============================================================================
+# Scaling
+# ============================================================================
+- variable: workflows.replicaCount
+  label: Workflows Replicas
+  type: int
+  default: 1
+  min: 1
+  max: 10
+  group: "Scaling"
+
+- variable: server.replicaCount
+  label: Server (API) Replicas
+  type: int
+  default: 1
+  min: 1
+  max: 10
+  group: "Scaling"
+
+- variable: checker.replicaCount
+  label: Checker Replicas
+  type: int
+  default: 1
+  min: 1
+  max: 10
+  group: "Scaling"
+  show_if: "checker.enabled=true"
+
+- variable: privateLocation.replicaCount
+  label: Private Location Replicas
+  type: int
+  default: 1
+  min: 1
+  max: 10
+  group: "Scaling"
+  show_if: "privateLocation.enabled=true"
+
+# ============================================================================
+# Advanced
+# ============================================================================
+- variable: global.imagePullPolicy
+  label: Image Pull Policy
+  type: enum
+  default: "IfNotPresent"
+  options:
+    - "Always"
+    - "IfNotPresent"
+    - "Never"
+  group: "Advanced"
+
+- variable: existingSecret
+  label: Existing Secret Name
+  description: "Use an existing Kubernetes Secret instead of creating one from the values above. Must contain all required keys."
+  type: string
+  default: ""
+  group: "Advanced"
