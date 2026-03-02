@@ -49,9 +49,9 @@ secrets:
   CRON_SECRET: ""
   ## Optional - Analytics
   TINY_BIRD_API_KEY: ""
-  ## Optional - Redis/Queue
-  UPSTASH_REDIS_REST_URL: ""
-  UPSTASH_REDIS_REST_TOKEN: ""
+  ## Required by workflows service - set to your Upstash Redis URL or use placeholder
+  UPSTASH_REDIS_REST_URL: "http://localhost:6379"
+  UPSTASH_REDIS_REST_TOKEN: "placeholder"
   QSTASH_CURRENT_SIGNING_KEY: ""
   QSTASH_NEXT_SIGNING_KEY: ""
   QSTASH_TOKEN: ""
