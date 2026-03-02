@@ -116,12 +116,6 @@ questions:
   default: true
   group: "Components"
 
-- variable: dbMigrate.enabled
-  label: Enable DB Migration
-  description: "Run database migrations on install/upgrade"
-  type: boolean
-  default: true
-  group: "Components"
 
 # ============================================================================
 # Dashboard Ingress

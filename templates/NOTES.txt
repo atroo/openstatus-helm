@@ -9,7 +9,6 @@ Components:
   - Private Location: {{ if .Values.privateLocation.enabled }}enabled{{ else }}disabled{{ end }}
   - Dashboard:        enabled
   - Status Page:      enabled
-  - DB Migration:     {{ if .Values.dbMigrate.enabled }}enabled{{ else }}disabled{{ end }}
 
 {{- if .Values.dashboard.ingress.enabled }}
 
