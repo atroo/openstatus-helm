@@ -85,10 +85,10 @@ imagePullSecrets:
 {{- end }}
 
 {{/*
-Init container that waits for a service to be ready
-Usage: {{ include "openstatus.waitFor" (dict "name" "libsql" "host" "openstatus-libsql" "port" "8080" "path" "/") }}
+Init container that waits for a service via HTTP
+Usage: {{ include "openstatus.waitForHttp" (dict "name" "server" "host" "openstatus-server" "port" "3000" "path" "/ping") }}
 */}}
-{{- define "openstatus.waitFor" -}}
+{{- define "openstatus.waitForHttp" -}}
 - name: wait-for-{{ .name }}
   image: busybox:1.36
   command:
@@ -96,7 +96,26 @@ Usage: {{ include "openstatus.waitFor" (dict "name" "libsql" "host" "openstatus-
     - -c
     - |
       echo "Waiting for {{ .name }} at {{ .host }}:{{ .port }}{{ .path }}..."
-      until wget -q --spider http://{{ .host }}:{{ .port }}{{ .path }} 2>/dev/null; do
+      until wget -q -O /dev/null http://{{ .host }}:{{ .port }}{{ .path }} 2>/dev/null; do
+        echo "{{ .name }} not ready, retrying in 5s..."
+        sleep 5
+      done
+      echo "{{ .name }} is ready."
+{{- end }}
+
+{{/*
+Init container that waits for a TCP port to be open
+Usage: {{ include "openstatus.waitForTcp" (dict "name" "libsql" "host" "openstatus-libsql" "port" "8080") }}
+*/}}
+{{- define "openstatus.waitForTcp" -}}
+- name: wait-for-{{ .name }}
+  image: busybox:1.36
+  command:
+    - sh
+    - -c
+    - |
+      echo "Waiting for {{ .name }} at {{ .host }}:{{ .port }}..."
+      until nc -z {{ .host }} {{ .port }} 2>/dev/null; do
         echo "{{ .name }} not ready, retrying in 5s..."
         sleep 5
       done

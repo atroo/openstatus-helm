@@ -17,7 +17,7 @@ spec:
     spec:
       {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
       initContainers:
-        {{- include "openstatus.waitFor" (dict "name" "server" "host" (include "openstatus.serverHost" .) "port" (toString .Values.server.service.port) "path" "/ping") | nindent 8 }}
+        {{- include "openstatus.waitForHttp" (dict "name" "server" "host" (include "openstatus.serverHost" .) "port" (toString .Values.server.service.port) "path" "/ping") | nindent 8 }}
       containers:
         - name: checker
           image: "{{ .Values.checker.image.repository }}:{{ .Values.checker.image.tag }}"

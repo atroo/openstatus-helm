@@ -16,8 +16,8 @@ spec:
     spec:
       {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
       initContainers:
-        {{- include "openstatus.waitFor" (dict "name" "libsql" "host" (include "openstatus.libsqlHost" .) "port" "8080" "path" "/") | nindent 8 }}
-        {{- include "openstatus.waitFor" (dict "name" "workflows" "host" (include "openstatus.workflowsHost" .) "port" (toString .Values.workflows.service.port) "path" "/ping") | nindent 8 }}
+        {{- include "openstatus.waitForTcp" (dict "name" "libsql" "host" (include "openstatus.libsqlHost" .) "port" "8080") | nindent 8 }}
+        {{- include "openstatus.waitForHttp" (dict "name" "workflows" "host" (include "openstatus.workflowsHost" .) "port" (toString .Values.workflows.service.port) "path" "/ping") | nindent 8 }}
       containers:
         - name: server
           image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
