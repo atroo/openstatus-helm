@@ -1,0 +1,16 @@
+apiVersion: v2
+name: openstatus
+description: A Helm chart for OpenStatus - open-source monitoring platform
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - monitoring
+  - status-page
+  - uptime
+  - openstatus
+home: https://github.com/openstatusHQ/openstatus
+sources:
+  - https://github.com/openstatusHQ/openstatus
+maintainers:
+  - name: openstatus

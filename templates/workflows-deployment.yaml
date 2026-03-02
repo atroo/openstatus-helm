@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openstatus.fullname" . }}-workflows
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "workflows") | nindent 4 }}
+spec:
+  replicas: {{ .Values.workflows.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "openstatus.selectorLabels" (dict "context" . "component" "workflows") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "openstatus.componentLabels" (dict "context" . "component" "workflows") | nindent 8 }}
+    spec:
+      {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
+      initContainers:
+        {{- include "openstatus.waitFor" (dict "name" "libsql" "host" (include "openstatus.libsqlHost" .) "port" "8080" "path" "/") | nindent 8 }}
+      containers:
+        - name: workflows
+          image: "{{ .Values.workflows.image.repository }}:{{ .Values.workflows.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "openstatus.configMapName" . }}
+            - secretRef:
+                name: {{ include "openstatus.secretName" . }}
+          env:
+            - name: PORT
+              value: {{ .Values.workflows.env.PORT | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.workflows.service.port }}
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.workflows.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.workflows.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.workflows.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.workflows.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.workflows.healthcheck.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.workflows.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.workflows.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.workflows.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.workflows.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.workflows.healthcheck.failureThreshold }}
+          resources:
+            {{- toYaml .Values.workflows.resources | nindent 12 }}

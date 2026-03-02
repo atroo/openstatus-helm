@@ -1,0 +1,55 @@
+{{- if .Values.checker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openstatus.fullname" . }}-checker
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "checker") | nindent 4 }}
+spec:
+  replicas: {{ .Values.checker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "openstatus.selectorLabels" (dict "context" . "component" "checker") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "openstatus.componentLabels" (dict "context" . "component" "checker") | nindent 8 }}
+    spec:
+      {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
+      initContainers:
+        {{- include "openstatus.waitFor" (dict "name" "server" "host" (include "openstatus.serverHost" .) "port" (toString .Values.server.service.port) "path" "/ping") | nindent 8 }}
+      containers:
+        - name: checker
+          image: "{{ .Values.checker.image.repository }}:{{ .Values.checker.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "openstatus.configMapName" . }}
+            - secretRef:
+                name: {{ include "openstatus.secretName" . }}
+          env:
+            - name: PORT
+              value: {{ .Values.checker.env.PORT | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.checker.service.port }}
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.checker.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.checker.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.checker.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.checker.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.checker.healthcheck.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.checker.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.checker.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.checker.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.checker.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.checker.healthcheck.failureThreshold }}
+          resources:
+            {{- toYaml .Values.checker.resources | nindent 12 }}
+{{- end }}

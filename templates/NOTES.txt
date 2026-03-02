@@ -1,0 +1,36 @@
+OpenStatus has been deployed!
+
+Components:
+  - LibSQL:           {{ if .Values.libsql.enabled }}enabled{{ else }}disabled{{ end }}
+  - Tinybird:         {{ if .Values.tinybird.enabled }}enabled{{ else }}disabled{{ end }}
+  - Workflows:        enabled
+  - Server (API):     enabled
+  - Checker:          {{ if .Values.checker.enabled }}enabled{{ else }}disabled{{ end }}
+  - Private Location: {{ if .Values.privateLocation.enabled }}enabled{{ else }}disabled{{ end }}
+  - Dashboard:        enabled
+  - Status Page:      enabled
+  - DB Migration:     {{ if .Values.dbMigrate.enabled }}enabled{{ else }}disabled{{ end }}
+
+{{- if .Values.dashboard.ingress.enabled }}
+
+Dashboard URL: http{{ if .Values.dashboard.ingress.tls }}s{{ end }}://{{ .Values.dashboard.ingress.hostname }}
+{{- else }}
+
+Access the dashboard:
+  kubectl port-forward svc/{{ include "openstatus.fullname" . }}-dashboard {{ .Values.dashboard.service.port }}:{{ .Values.dashboard.service.port }}
+  Then open: http://localhost:{{ .Values.dashboard.service.port }}
+{{- end }}
+
+{{- if .Values.statusPage.ingress.enabled }}
+
+Status Page URL: http{{ if .Values.statusPage.ingress.tls }}s{{ end }}://{{ .Values.statusPage.ingress.hostname }}
+{{- else }}
+
+Access the status page:
+  kubectl port-forward svc/{{ include "openstatus.fullname" . }}-status-page {{ .Values.statusPage.service.port }}:{{ .Values.statusPage.service.port }}
+  Then open: http://localhost:{{ .Values.statusPage.service.port }}
+{{- end }}
+
+IMPORTANT: Make sure you have set the required secrets:
+  - AUTH_SECRET (generate with: openssl rand -base64 32)
+  - RESEND_API_KEY (get from https://resend.com)

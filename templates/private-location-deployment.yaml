@@ -1,0 +1,63 @@
+{{- if .Values.privateLocation.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openstatus.fullname" . }}-private-location
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "private-location") | nindent 4 }}
+spec:
+  replicas: {{ .Values.privateLocation.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "openstatus.selectorLabels" (dict "context" . "component" "private-location") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "openstatus.componentLabels" (dict "context" . "component" "private-location") | nindent 8 }}
+    spec:
+      {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
+      initContainers:
+        {{- include "openstatus.waitFor" (dict "name" "server" "host" (include "openstatus.serverHost" .) "port" (toString .Values.server.service.port) "path" "/ping") | nindent 8 }}
+      containers:
+        - name: private-location
+          image: "{{ .Values.privateLocation.image.repository }}:{{ .Values.privateLocation.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "openstatus.configMapName" . }}
+            - secretRef:
+                name: {{ include "openstatus.secretName" . }}
+          env:
+            - name: PORT
+              value: {{ .Values.privateLocation.env.PORT | quote }}
+            - name: GIN_MODE
+              value: {{ .Values.privateLocation.env.GIN_MODE | quote }}
+            - name: DB_URL
+              value: "http://{{ include "openstatus.libsqlHost" . }}:{{ .Values.libsql.service.httpPort }}"
+            {{- if .Values.tinybird.enabled }}
+            - name: TINYBIRD_URL
+              value: "http://{{ include "openstatus.tinybirdHost" . }}:{{ .Values.tinybird.service.port }}"
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.privateLocation.service.port }}
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.privateLocation.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.privateLocation.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.privateLocation.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.privateLocation.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.privateLocation.healthcheck.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.privateLocation.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.privateLocation.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.privateLocation.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.privateLocation.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.privateLocation.healthcheck.failureThreshold }}
+          resources:
+            {{- toYaml .Values.privateLocation.resources | nindent 12 }}
+{{- end }}

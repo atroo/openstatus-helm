@@ -1,0 +1,21 @@
+{{- if .Values.libsql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "openstatus.fullname" . }}-libsql
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "libsql") | nindent 4 }}
+spec:
+  type: {{ .Values.libsql.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.libsql.service.httpPort }}
+      targetPort: http
+      protocol: TCP
+    - name: grpc
+      port: {{ .Values.libsql.service.grpcPort }}
+      targetPort: grpc
+      protocol: TCP
+  selector:
+    {{- include "openstatus.selectorLabels" (dict "context" . "component" "libsql") | nindent 4 }}
+{{- end }}

@@ -1,0 +1,31 @@
+{{- if .Values.dashboard.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "openstatus.fullname" . }}-dashboard
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "dashboard") | nindent 4 }}
+  {{- with .Values.dashboard.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.dashboard.ingress.className }}
+  ingressClassName: {{ .Values.dashboard.ingress.className | quote }}
+  {{- end }}
+  {{- if .Values.dashboard.ingress.tls }}
+  tls:
+    {{- toYaml .Values.dashboard.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.dashboard.ingress.hostname | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "openstatus.fullname" . }}-dashboard
+                port:
+                  name: http
+{{- end }}

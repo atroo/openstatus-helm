@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openstatus.fullname" . }}-server
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "server") | nindent 4 }}
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "openstatus.selectorLabels" (dict "context" . "component" "server") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "openstatus.componentLabels" (dict "context" . "component" "server") | nindent 8 }}
+    spec:
+      {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
+      initContainers:
+        {{- include "openstatus.waitFor" (dict "name" "libsql" "host" (include "openstatus.libsqlHost" .) "port" "8080" "path" "/") | nindent 8 }}
+        {{- include "openstatus.waitFor" (dict "name" "workflows" "host" (include "openstatus.workflowsHost" .) "port" (toString .Values.workflows.service.port) "path" "/ping") | nindent 8 }}
+      containers:
+        - name: server
+          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "openstatus.configMapName" . }}
+            - secretRef:
+                name: {{ include "openstatus.secretName" . }}
+          env:
+            - name: PORT
+              value: {{ .Values.server.env.PORT | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.server.service.port }}
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.server.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.server.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.server.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.server.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.server.healthcheck.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.server.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.server.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.server.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.server.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.server.healthcheck.failureThreshold }}
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}

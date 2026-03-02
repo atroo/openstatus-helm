@@ -1,0 +1,67 @@
+{{- if .Values.libsql.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "openstatus.fullname" . }}-libsql
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "libsql") | nindent 4 }}
+spec:
+  serviceName: {{ include "openstatus.fullname" . }}-libsql
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "openstatus.selectorLabels" (dict "context" . "component" "libsql") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "openstatus.componentLabels" (dict "context" . "component" "libsql") | nindent 8 }}
+    spec:
+      {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: libsql
+          image: "{{ .Values.libsql.image.repository }}:{{ .Values.libsql.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: SQLD_NODE
+              value: "primary"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: grpc
+              containerPort: 5001
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/sqld
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: {{ .Values.libsql.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.libsql.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.libsql.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.libsql.healthcheck.failureThreshold }}
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: {{ .Values.libsql.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.libsql.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.libsql.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.libsql.healthcheck.failureThreshold }}
+          resources:
+            {{- toYaml .Values.libsql.resources | nindent 12 }}
+  {{- if .Values.libsql.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          {{- toYaml .Values.libsql.persistence.accessModes | nindent 10 }}
+        {{- if .Values.libsql.persistence.storageClass }}
+        storageClassName: {{ .Values.libsql.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.libsql.persistence.size }}
+  {{- end }}
+{{- end }}

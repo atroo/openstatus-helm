@@ -1,0 +1,48 @@
+{{- if .Values.tinybird.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openstatus.fullname" . }}-tinybird
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "tinybird") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "openstatus.selectorLabels" (dict "context" . "component" "tinybird") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "openstatus.componentLabels" (dict "context" . "component" "tinybird") | nindent 8 }}
+    spec:
+      {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: tinybird
+          image: "{{ .Values.tinybird.image.repository }}:{{ .Values.tinybird.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: COMPATIBILITY_MODE
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 7181
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: {{ .Values.tinybird.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tinybird.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.tinybird.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.tinybird.healthcheck.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: {{ .Values.tinybird.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tinybird.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.tinybird.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.tinybird.healthcheck.failureThreshold }}
+          resources:
+            {{- toYaml .Values.tinybird.resources | nindent 12 }}
+{{- end }}

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "openstatus.fullname" . }}-workflows
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "workflows") | nindent 4 }}
+spec:
+  type: {{ .Values.workflows.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.workflows.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "openstatus.selectorLabels" (dict "context" . "component" "workflows") | nindent 4 }}

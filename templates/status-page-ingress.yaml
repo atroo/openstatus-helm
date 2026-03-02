@@ -1,0 +1,31 @@
+{{- if .Values.statusPage.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "openstatus.fullname" . }}-status-page
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "status-page") | nindent 4 }}
+  {{- with .Values.statusPage.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.statusPage.ingress.className }}
+  ingressClassName: {{ .Values.statusPage.ingress.className | quote }}
+  {{- end }}
+  {{- if .Values.statusPage.ingress.tls }}
+  tls:
+    {{- toYaml .Values.statusPage.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.statusPage.ingress.hostname | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "openstatus.fullname" . }}-status-page
+                port:
+                  name: http
+{{- end }}
