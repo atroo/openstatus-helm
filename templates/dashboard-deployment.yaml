@@ -15,7 +15,9 @@ spec:
         {{- include "openstatus.componentLabels" (dict "context" . "component" "dashboard") | nindent 8 }}
     spec:
       {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ include "openstatus.fullname" . }}-migrate-watcher
       initContainers:
+        {{- include "openstatus.waitForMigrate" (dict "fullname" (include "openstatus.fullname" .)) | nindent 8 }}
         {{- include "openstatus.waitForTcp" (dict "name" "libsql" "host" (include "openstatus.libsqlHost" .) "port" "8080") | nindent 8 }}
         {{- include "openstatus.waitForHttp" (dict "name" "workflows" "host" (include "openstatus.workflowsHost" .) "port" (toString .Values.workflows.service.port) "path" "/ping") | nindent 8 }}
         {{- include "openstatus.waitForHttp" (dict "name" "server" "host" (include "openstatus.serverHost" .) "port" (toString .Values.server.service.port) "path" "/ping") | nindent 8 }}

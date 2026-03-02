@@ -123,6 +123,26 @@ Usage: {{ include "openstatus.waitForTcp" (dict "name" "libsql" "host" "openstat
 {{- end }}
 
 {{/*
+Init container that waits for the db-migrate Job to complete.
+Uses the Kubernetes API via the service account to check job status.
+Usage: {{ include "openstatus.waitForMigrate" (dict "fullname" (include "openstatus.fullname" .)) }}
+*/}}
+{{- define "openstatus.waitForMigrate" -}}
+- name: wait-for-db-migrate
+  image: bitnami/kubectl:latest
+  command:
+    - sh
+    - -c
+    - |
+      echo "Waiting for db-migrate job to complete..."
+      until kubectl get job {{ .fullname }}-db-migrate -o jsonpath='{.status.succeeded}' 2>/dev/null | grep -q "1"; do
+        echo "db-migrate not yet complete, retrying in 10s..."
+        sleep 10
+      done
+      echo "db-migrate completed."
+{{- end }}
+
+{{/*
 LibSQL service host
 */}}
 {{- define "openstatus.libsqlHost" -}}
