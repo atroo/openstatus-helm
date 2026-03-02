@@ -29,6 +29,9 @@ spec:
           env:
             - name: PORT
               value: {{ .Values.workflows.env.PORT | quote }}
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
           ports:
             - name: http
               containerPort: {{ .Values.workflows.service.port }}
@@ -51,3 +54,6 @@ spec:
             failureThreshold: {{ .Values.workflows.healthcheck.failureThreshold }}
           resources:
             {{- toYaml .Values.workflows.resources | nindent 12 }}
+      volumes:
+        - name: data
+          emptyDir: {}
