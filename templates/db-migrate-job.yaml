@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "openstatus.fullname" . }}-db-migrate
+  labels:
+    {{- include "openstatus.componentLabels" (dict "context" . "component" "db-migrate") | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "openstatus.componentLabels" (dict "context" . "component" "db-migrate") | nindent 8 }}
+    spec:
+      {{- include "openstatus.imagePullSecrets" . | nindent 6 }}
+      restartPolicy: OnFailure
+      initContainers:
+        {{- include "openstatus.waitForTcp" (dict "name" "libsql" "host" (include "openstatus.libsqlHost" .) "port" "8080") | nindent 8 }}
+        - name: clone-repo
+          image: alpine/git:latest
+          command:
+            - sh
+            - -c
+            - |
+              git clone --depth 1 https://github.com/openstatusHQ/openstatus.git /repo
+          volumeMounts:
+            - name: repo
+              mountPath: /repo
+      containers:
+        - name: db-migrate
+          image: oven/bun:1.3.6
+          workingDir: /repo/packages/db
+          command: ["sh", "-c", "bun install && bun run migrate"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "openstatus.configMapName" . }}
+            - secretRef:
+                name: {{ include "openstatus.secretName" . }}
+          volumeMounts:
+            - name: repo
+              mountPath: /repo
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: repo
+          emptyDir: {}
