@@ -100,6 +100,41 @@ questions:
   group: "Analytics"
 
 # ============================================================================
+# Redis (Upstash-compatible via SRH proxy)
+# ============================================================================
+- variable: redis.enabled
+  label: Enable Redis
+  description: "Deploy a local Redis instance. Required by workflows and server services for caching."
+  type: boolean
+  default: true
+  group: "Redis"
+  show_subquestion_if: true
+  subquestions:
+    - variable: redis.resources.requests.cpu
+      label: CPU Request
+      type: string
+      default: "50m"
+    - variable: redis.resources.limits.memory
+      label: Memory Limit
+      type: string
+      default: "128Mi"
+
+- variable: serverlessRedisHttp.enabled
+  label: Enable Serverless Redis HTTP (SRH)
+  description: "Deploy an Upstash-compatible REST proxy in front of Redis. Required because OpenStatus uses the @upstash/redis SDK which communicates over HTTP, not the Redis protocol."
+  type: boolean
+  default: true
+  group: "Redis"
+  show_if: "redis.enabled=true"
+  show_subquestion_if: true
+  subquestions:
+    - variable: serverlessRedisHttp.token
+      label: SRH Auth Token
+      description: "Token used to authenticate REST requests to SRH. Auto-configured for all services."
+      type: string
+      default: "openstatus-redis-token"
+
+# ============================================================================
 # Optional Components
 # ============================================================================
 - variable: checker.enabled
